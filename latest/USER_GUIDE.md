@@ -3,6 +3,31 @@
 This guide is for day-to-day use at events.
 Think of the app like a digital sign-in sheet that can still cope if the internet is patchy.
 
+## Table of contents
+
+- [What this app does](#what-this-app-does)
+- [Before you start an event](#before-you-start-an-event)
+- [Start the app (normal mode vs non-kiosk mode)](#start-the-app-normal-mode-vs-non-kiosk-mode)
+- [What kiosk mode means](#what-kiosk-mode-means)
+- [Start in normal kiosk mode](#start-in-normal-kiosk-mode)
+- [Start in non-kiosk mode (step by step)](#start-in-non-kiosk-mode-step-by-step)
+- [How to register a visitor](#how-to-register-a-visitor)
+- [Using the QR code](#using-the-qr-code)
+- [If internet drops or is slow](#if-internet-drops-or-is-slow)
+- [Opening Admin Tools](#opening-admin-tools)
+- [Admin Tools explained (simple)](#admin-tools-explained-simple)
+- [Configuration](#configuration)
+- [Admin password controls](#admin-password-controls)
+- [Local Data](#local-data)
+- [Runtime Logs](#runtime-logs)
+- [Kiosk mode note](#kiosk-mode-note)
+- [Common problems and quick fixes](#common-problems-and-quick-fixes)
+- [I pressed Submit and nothing seems to happen](#i-pressed-submit-and-nothing-seems-to-happen)
+- [Pending uploads is not zero](#pending-uploads-is-not-zero)
+- [Admin password forgotten](#admin-password-forgotten)
+- [Good operating habit at the end of each day](#good-operating-habit-at-the-end-of-each-day)
+- [One-line summary](#one-line-summary)
+
 ## What this app does
 
 - Collects visitor details
@@ -60,28 +85,6 @@ If you are using the installed app on Mac:
 	`open -a "Ridley Eye Foundation Lead Capture" --args --nokiosk`
 3. If your app name is slightly different, type `open -a "` then drag the app from Applications into Terminal, then add `" --args --nokiosk` and press Enter.
 4. The app will open in non-kiosk mode.
-
-### Mac install for unsigned app
-
-If macOS warns that the app is unsigned or blocked, use this immediate unblock step on your Mac:
-
-1. Move the app into Applications first.
-2. Open the **Terminal** app (Applications > Utilities > Terminal).
-3. Run this command:
-
-	`xattr -dr com.apple.quarantine "/Applications/Ridley Eye Foundation Lead Capture.app"`
-
-4. Try opening the app again.
-
-Optional verification:
-
-- Check Gatekeeper assessment:
-
-	`spctl --assess -vv "/Applications/Ridley Eye Foundation Lead Capture.app"`
-
-- Check signature metadata:
-
-	`codesign -dv --verbose=4 "/Applications/Ridley Eye Foundation Lead Capture.app"`
 
 ## How to register a visitor
 

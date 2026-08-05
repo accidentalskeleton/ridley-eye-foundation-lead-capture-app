@@ -1,4 +1,6 @@
-# Spreadsheet Setup
+# Setup Guide
+
+This guide covers installation-related setup and submission endpoint configuration for the app.
 
 This project can send submissions to either Google Sheets or Microsoft Excel Online.
 GitHub Pages and Electron read their bundled defaults from `config.js` (`site/config.js` source and `docs/config.js` publish output).
@@ -6,6 +8,38 @@ The Electron app can override bundled values with its device-local Electron user
 The spreadsheet side must expose an HTTP endpoint that accepts the payload shape used by the form.
 
 For the public GitHub Pages form, the endpoint must also return a successful CORS-enabled response to the GitHub Pages origin. The form now verifies the response before showing a submission confirmation. If a Google Apps Script or Power Automate endpoint cannot provide CORS headers, place a CORS-enabled proxy or API in front of it; do not use an opaque `no-cors` request because it cannot confirm that a record was saved.
+
+## Table of contents
+
+- [macOS install for unsigned app](#macos-install-for-unsigned-app)
+- [Submission payload](#submission-payload)
+- [Google Sheets setup](#google-sheets-setup)
+- [Google Sheets checklist](#google-sheets-checklist)
+- [Microsoft Excel Online setup](#microsoft-excel-online-setup)
+- [Excel checklist](#excel-checklist)
+- [Updating the configuration](#updating-the-configuration)
+
+## macOS install for unsigned app
+
+If macOS warns that the app is unsigned or blocked, use this immediate unblock step on your Mac:
+
+1. Move the app into Applications first.
+2. Open the **Terminal** app (Applications > Utilities > Terminal).
+3. Run this command:
+
+   `xattr -dr com.apple.quarantine "/Applications/Ridley Eye Foundation Lead Capture.app"`
+
+4. Try opening the app again.
+
+Optional verification:
+
+- Check Gatekeeper assessment:
+
+   `spctl --assess -vv "/Applications/Ridley Eye Foundation Lead Capture.app"`
+
+- Check signature metadata:
+
+   `codesign -dv --verbose=4 "/Applications/Ridley Eye Foundation Lead Capture.app"`
 
 ## Submission payload
 

@@ -6,7 +6,7 @@ Public client-facing documentation for release v1.3.0.
 
 - [Setup guide](./latest/SETUP.md)
 - [User guide](./latest/USER_GUIDE.md)
-- [Release notes](./latest/RELEASE_NOTES.md)
+- [Changelog](./latest/CHANGELOG.md)
 
 ## Verification
 
