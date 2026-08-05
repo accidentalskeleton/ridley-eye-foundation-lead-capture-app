@@ -1,2 +1,0 @@
-f49aa1a741919d6bcc2c3cd9028999af0d3ad7617e092fae31603a08f8b86b4c  release-assets/Ridley Eye Foundation Lead Capture-1.2.1-arm64.dmg
-4e3d21c14ecbf97f6122fe756b739b2b5f0fbc2c6333e1cf28a1c54d22c0d3ea  release-assets/Ridley Eye Foundation Lead Capture-1.2.1-x64.exe
