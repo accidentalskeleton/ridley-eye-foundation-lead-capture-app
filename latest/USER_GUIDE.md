@@ -61,6 +61,28 @@ If you are using the installed app on Mac:
 3. If your app name is slightly different, type `open -a "` then drag the app from Applications into Terminal, then add `" --args --nokiosk` and press Enter.
 4. The app will open in non-kiosk mode.
 
+### Mac install for unsigned app
+
+If macOS warns that the app is unsigned or blocked, use this immediate unblock step on your Mac:
+
+1. Move the app into Applications first.
+2. Open the **Terminal** app (Applications > Utilities > Terminal).
+3. Run this command:
+
+	`xattr -dr com.apple.quarantine "/Applications/Ridley Eye Foundation Lead Capture.app"`
+
+4. Try opening the app again.
+
+Optional verification:
+
+- Check Gatekeeper assessment:
+
+	`spctl --assess -vv "/Applications/Ridley Eye Foundation Lead Capture.app"`
+
+- Check signature metadata:
+
+	`codesign -dv --verbose=4 "/Applications/Ridley Eye Foundation Lead Capture.app"`
+
 ## How to register a visitor
 
 - Fill in First Name, Last Name, Organisation, and Email (these are required)
@@ -113,7 +135,7 @@ If no admin password exists yet, you will be asked to create one.
 
 ### Local Data
 
-- Export All Visitors CSV: downloads all local visitor records
+- Export All Local Records CSV: downloads all local visitor records
 - Export Pending Uploads CSV: downloads only records still waiting to upload
 - Clear Local Data: permanently deletes local visitor records on this device
 
@@ -179,7 +201,7 @@ Important:
 
 ## Good operating habit at the end of each day
 
-- Export All Visitors CSV
+- Export All Local Records CSV
 - Export Pending Uploads CSV
 - Confirm central spreadsheet has expected records
 - Keep backups with event date in filename
