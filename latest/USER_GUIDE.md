@@ -38,11 +38,11 @@ Think of the app like a digital sign-in sheet that can still cope if the interne
 ## Before you start an event
 
 - Open the app
-- Check the small status message at the top
+- Check the status message at the bottom-right
 - Do one test submission
 - Confirm the test appears in your spreadsheet
 
-If you see a warning at the top, open Admin Tools and check settings.
+If you see a warning in the status area, open Admin Tools and check settings.
 
 ## Start the app (normal mode vs non-kiosk mode)
 
@@ -96,11 +96,12 @@ If you are using the installed app on Mac:
 After submit:
 
 - You will see a thank-you message
+- The status area briefly shows whether the record was sent, queued, or needs attention
 - The screen returns to the form automatically
 
 ## Using the QR code
 
-In the desktop app, a QR code can be shown near the top.
+In the desktop app, a QR code can be shown near the top-right.
 Visitors can scan it to open the public version of the same form on their phone.
 
 ## If internet drops or is slow
@@ -111,6 +112,7 @@ The app keeps records locally and retries uploads.
 What to do:
 
 - Keep collecting visitor details as normal
+- Watch the bottom-right status for online/offline and retry messages
 - Later, open Admin Tools and check Pending uploads
 - Wait for internet to return, or export pending records as backup
 

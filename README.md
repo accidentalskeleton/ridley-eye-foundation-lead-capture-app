@@ -1,6 +1,6 @@
 # Ridley Eye Foundation Lead Capture App Downloads
 
-Public client-facing documentation for release v1.3.0.
+Public client-facing documentation for release v1.3.1.
 
 ## Downloads
 

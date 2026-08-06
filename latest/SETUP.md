@@ -15,6 +15,8 @@ For the public GitHub Pages form, the endpoint must also return a successful COR
 - [Submission payload](#submission-payload)
 - [Google Sheets setup](#google-sheets-setup)
 - [Google Sheets checklist](#google-sheets-checklist)
+- [Google Apps Script proxy setup](#google-apps-script-proxy-setup)
+- [Proxy checklist](#proxy-checklist)
 - [Microsoft Excel Online setup](#microsoft-excel-online-setup)
 - [Excel checklist](#excel-checklist)
 - [Updating the configuration](#updating-the-configuration)
@@ -153,6 +155,7 @@ function doPost(e) {
       if (!sheet) {
          sheet = spreadsheet.insertSheet(eventSheetName);
          sheet.appendRow(HEADERS);
+         sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight("bold");
       }
 
       if (!submissionId) {
@@ -215,6 +218,115 @@ The app sends a unique `submissionId` for each lead, so the handler should ignor
 - Confirm the script appends the fields in the same order as the app payload.
 - Submit one test record and verify a row appears in the correct tab.
 
+## Google Apps Script proxy setup
+
+Use this path when the public GitHub Pages form needs a stable `FLOW_URL`, but the real submission endpoint may change over time.
+
+Recommended pattern:
+
+1. Keep `FLOW_URL` in `site/config.js` pointed at one long-lived Apps Script proxy `/exec` URL.
+2. Store the real downstream endpoint in the proxy's Script Properties as `TARGET_FLOW_URL`.
+3. Update `TARGET_FLOW_URL` when the destination changes, instead of republishing the GitHub Pages site.
+
+This is useful when:
+
+- the public site should always post to one fixed URL
+- the real Google Apps Script or Power Automate endpoint may be rotated later
+- you want the browser form to receive a normal JSON success/failure response with CORS headers
+
+Create a dedicated Apps Script project and use a proxy handler like this:
+
+```javascript
+function createJsonOutput(payload) {
+   return ContentService
+      .createTextOutput(JSON.stringify(payload))
+      .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet() {
+   return createJsonOutput({ ok: true, proxy: true });
+}
+
+function doPost(e) {
+   const props = PropertiesService.getScriptProperties();
+   const targetUrl = String(props.getProperty('TARGET_FLOW_URL') || '').trim();
+
+   if (!targetUrl) {
+      return createJsonOutput({
+         ok: false,
+         error: 'TARGET_FLOW_URL is not configured'
+      });
+   }
+
+   const payload = e && e.postData && e.postData.contents
+      ? e.postData.contents
+      : '{}';
+
+   try {
+      const response = UrlFetchApp.fetch(targetUrl, {
+         method: 'post',
+         contentType: 'application/json',
+         payload: payload,
+         muteHttpExceptions: true
+      });
+
+      const body = response.getContentText();
+      const code = response.getResponseCode();
+
+      if (code < 200 || code >= 300) {
+         return createJsonOutput({
+            ok: false,
+            error: 'Proxy target returned an error',
+            status: code,
+            body: body
+         });
+      }
+
+      try {
+         return createJsonOutput(JSON.parse(body));
+      } catch (parseError) {
+         return createJsonOutput({
+            ok: true,
+            proxied: true,
+            status: code,
+            raw: body
+         });
+      }
+   } catch (error) {
+      return createJsonOutput({
+         ok: false,
+         error: String(error && error.message ? error.message : error)
+      });
+   }
+}
+```
+
+Deployment steps:
+
+1. Open **Project Settings** in Apps Script.
+2. Add a Script Property named `TARGET_FLOW_URL` with the real downstream URL.
+3. Deploy the proxy script as a Web App.
+   - Execute as: `Me`
+   - Who has access: `Anyone` or `Anyone with the link`
+4. Put the proxy `/exec` URL into `FLOW_URL` in `site/config.js`.
+5. Test one public GitHub Pages submission.
+6. When the real destination changes later, update only `TARGET_FLOW_URL` in Script Properties.
+
+Notes:
+
+- Keep the proxy project long-lived so the public `FLOW_URL` stays stable.
+- Do not store secrets in `site/config.js`; it is public.
+- If the downstream target requires auth headers or custom routing, move that logic into the proxy rather than exposing it in the site.
+- For GitHub Pages, verify the proxy returns a normal JSON response that the form can inspect.
+
+### Proxy checklist
+
+- `FLOW_URL` in `site/config.js` points to the proxy `/exec` URL, not the changing downstream target.
+- The proxy Script Property `TARGET_FLOW_URL` is set.
+- The proxy Web App is deployed and accessible.
+- The downstream target still accepts the app's submission payload.
+- A live public Pages submission succeeds after each target rotation.
+
 ## Microsoft Excel Online setup
 
 Use this path when you want submissions stored in Excel Online or SharePoint/OneDrive.
@@ -242,6 +354,8 @@ If you use the in-app admin settings in the Electron build, the same values can 
 
 - `FLOW_URL`
 - `EVENT_ID`
+
+For the public GitHub Pages site, `FLOW_URL` should usually be a stable public endpoint. If the real submission target may change, prefer a proxy URL that stays fixed and forwards to the current destination.
 
 The admin password is created and stored per device in the Electron app. It is not stored in `site/config.js`.
 

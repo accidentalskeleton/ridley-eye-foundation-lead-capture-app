@@ -1,2 +1,2 @@
-6fb1be6583d52fa93ebf96cec5e46ca47dfa4718ddd5d7b0a04e5ec68393cfbc  Ridley Eye Foundation Lead Capture-1.3.0-arm64.dmg
-559923d5d22d30f8b9c958b4210a857e910e176744ffca5569accbbfbb586f5e  Ridley Eye Foundation Lead Capture-1.3.0-x64.exe
+74705dee8ccd06a0908d1675580440b69dc464d2646e7de71eee4c983aa6c1b3  Ridley Eye Foundation Lead Capture-1.3.1-arm64.dmg
+0bbbe6b3d76b86eea969c3695607af39ccdf7281be4ea1375ca096ad243464d4  Ridley Eye Foundation Lead Capture-1.3.1-x64.exe
