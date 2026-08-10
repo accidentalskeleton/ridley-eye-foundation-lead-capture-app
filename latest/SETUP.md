@@ -20,6 +20,7 @@ For the public GitHub Pages form, the endpoint must also return a successful COR
 - [Microsoft Excel Online setup](#microsoft-excel-online-setup)
 - [Excel checklist](#excel-checklist)
 - [Updating the configuration](#updating-the-configuration)
+- [Rebuild and preview pages output](#rebuild-and-preview-pages-output)
 
 ## macOS install for unsigned app
 
@@ -217,6 +218,44 @@ The app sends a unique `submissionId` for each lead, so the handler should ignor
 - Confirm the script has permission to write to the target spreadsheet.
 - Confirm the script appends the fields in the same order as the app payload.
 - Submit one test record and verify a row appears in the correct tab.
+
+## Rebuild and preview pages output
+
+Use these commands when you need to validate the public GitHub Pages output locally.
+
+Build with local preview defaults:
+
+```bash
+npm run build:pages:local
+```
+
+Build with explicit publish values:
+
+```bash
+EVENT_ID=REF-2026-EVENT \
+FLOW_URL=https://your-endpoint.example.com \
+GITHUB_PAGES_URL=https://YOUR-USERNAME.github.io/ridley-eye-foundation-lead-capture/ \
+npm run build:pages
+```
+
+Serve the generated `docs/` output:
+
+```bash
+npm run serve:pages
+```
+
+One-command local preview:
+
+```bash
+npm run preview:pages
+```
+
+Optional build flags:
+
+- `AGGRESSIVE_MINIFY=1` for stronger JS mangling.
+- `MINIFY_JOBS=4` to control minification concurrency.
+- `PAGES_SOURCE_MAPS=1` to emit debug source maps.
+- `PAGES_OUTPUT_DIR=docs` to override output path.
 
 ## Google Apps Script proxy setup
 

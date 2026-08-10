@@ -154,7 +154,7 @@ If no admin password exists yet, you will be asked to create one.
 
 The app normally runs in kiosk mode.
 
-- Exit shortcut: Ctrl/Cmd + Shift + Q
+- Quit app shortcut: Ctrl/Cmd + Shift + Q
 - Non-kiosk launch option is for admin/testing only
 
 ## Common problems and quick fixes

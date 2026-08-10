@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.0.0 - Public submission hardening and release readiness
+
+### Added
+
+* Shared runtime defaults and controller helper abstractions for consistent behavior across Electron and GitHub Pages.
+* Regression coverage for QR rendering, startup bootstrapping, validation, and submission payload wiring.
+
+### Changed
+
+* Refactored the app bootstrap, runtime UI, submission flow, and admin controllers to share common initialization and validation paths.
+* Hardened the form submission flow so the public Pages site and the Electron app both use the same app-controlled validation and payload handling.
+* Scope mirrored public release notes to the current release version section instead of including all subsequent changelog history
+
+### Fixed
+
+* Fixed the public submit path that was failing during payload creation due to incorrect controller option wiring.
+* Ensured the form uses app-controlled validation rather than being blocked by browser-native validation.
+* Restored startup QR rendering and bootstrap resilience when earlier initialization tasks fail.
+* Populate GitHub Pages runtime config with `APP_VERSION` during deploy builds
+* Show `App v...` in the status bar on GitHub Pages using config fallback when Electron APIs are unavailable
+
 ## 1.3.1 - Runtime UX, CI simplification, and Pages config hardening
 
 ### Added
