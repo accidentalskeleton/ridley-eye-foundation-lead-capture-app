@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.0.1 - Direct website channel tracking
+
+### Fixed
+
+* Correct direct public-site registrations to use the `Direct Website` channel instead of being mislabeled as `QR Scan`.
+* Add regression coverage to keep the three registration channels consistent across Electron, QR-driven, and direct Pages submissions.
+
 ## 2.0.0 - Public submission hardening and release readiness
 
 ### Added
