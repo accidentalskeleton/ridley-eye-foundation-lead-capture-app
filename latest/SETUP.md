@@ -49,7 +49,9 @@ Optional verification:
 The app sends these fields:
 
 - `submissionId`
-- `eventId`
+- `event_id`
+- `flow_url`
+- `ctx`
 - `timestamp`
 - `firstName`
 - `lastName`
@@ -87,7 +89,7 @@ Keep the spreadsheet columns aligned with that order if you want the row mapping
 Use this path when you want submissions stored in a Google Sheet.
 
 1. Create a Google Spreadsheet for the event leads.
-2. Open Apps Script from the spreadsheet and paste in a submission handler like this. It writes each submission to a tab named after its `eventId`, creating the tab and its headers on the first submission for that event.
+2. Open Apps Script from the spreadsheet and paste in a submission handler like this. It writes each submission to a tab named after its `event_id`, creating the tab and its headers on the first submission for that event.
 
 ```javascript
 const HEADERS = [
@@ -142,11 +144,11 @@ function doPost(e) {
 
    try {
       const payload = JSON.parse(e.postData.contents || '{}');
-      const eventId = String(payload.eventId || '').trim();
+      const eventId = String(payload.event_id || '').trim();
       const submissionId = String(payload.submissionId || '').trim();
 
       if (!eventId) {
-         throw new Error('eventId is required');
+         throw new Error('event_id is required');
       }
 
       const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -175,7 +177,7 @@ function doPost(e) {
 
       sheet.appendRow([
          submissionId,
-         payload.eventId || '',
+         eventId,
          payload.timestamp || '',
          payload.firstName || '',
          payload.lastName || '',
@@ -237,6 +239,23 @@ FLOW_URL=https://your-endpoint.example.com \
 GITHUB_PAGES_URL=https://YOUR-USERNAME.github.io/ridley-eye-foundation-lead-capture/ \
 npm run build:pages
 ```
+
+If you want printable QR codes to include a signed `ctx` token, set the signing secret before running `npm run generate:qr`.
+
+PowerShell:
+
+```powershell
+$env:QR_CTX_SIGNING_SECRET = "replace-with-long-random-secret"
+npm run generate:qr
+```
+
+Bash:
+
+```bash
+QR_CTX_SIGNING_SECRET="replace-with-long-random-secret" npm run generate:qr
+```
+
+When this variable is not set, `ctx` is still encoded but unsigned.
 
 Serve the generated `docs/` output:
 
@@ -358,6 +377,101 @@ Notes:
 - If the downstream target requires auth headers or custom routing, move that logic into the proxy rather than exposing it in the site.
 - For GitHub Pages, verify the proxy returns a normal JSON response that the form can inspect.
 
+### Proxy ctx signature verification (optional but recommended)
+
+If your QR links use signed `ctx` tokens, verify the signature in Apps Script before accepting the submission.
+
+1. Open **Project Settings** in the proxy Apps Script project.
+2. Add Script Property `QR_CTX_SIGNING_SECRET`.
+3. Use the same secret value that you set in `QR_CTX_SIGNING_SECRET` when generating printable QR codes.
+
+Add helpers like this to your proxy script:
+
+```javascript
+function getScriptSecret(name) {
+   return String(PropertiesService.getScriptProperties().getProperty(name) || '').trim();
+}
+
+function decodeBase64Url(base64url) {
+   const normalized = String(base64url || '')
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+   const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+   const bytes = Utilities.base64Decode(padded);
+
+   return Utilities.newBlob(bytes).getDataAsString('UTF-8');
+}
+
+function toBase64UrlFromBytes(bytes) {
+   return Utilities.base64Encode(bytes)
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/g, '');
+}
+
+function verifyCtxToken(ctxToken, secret) {
+   const token = String(ctxToken || '').trim();
+   const key = String(secret || '').trim();
+
+   if (!token) {
+      return { ok: true, payload: {} };
+   }
+
+   const parts = token.split('.');
+   const payloadPart = parts[0] || '';
+   const signaturePart = parts.length > 1 ? parts[1] : '';
+
+   if (!payloadPart) {
+      throw new Error('ctx payload is missing');
+   }
+
+   if (key) {
+      if (!signaturePart) {
+         throw new Error('ctx signature is missing');
+      }
+
+      const expectedSignature = toBase64UrlFromBytes(
+         Utilities.computeHmacSha256Signature(payloadPart, key)
+      );
+
+      if (expectedSignature !== signaturePart) {
+         throw new Error('ctx signature is invalid');
+      }
+   }
+
+   const decoded = decodeBase64Url(payloadPart);
+   const payload = JSON.parse(decoded || '{}');
+
+   return {
+      ok: true,
+      payload: payload
+   };
+}
+```
+
+Then call verification in `doPost` before forwarding:
+
+```javascript
+const requestPayload = JSON.parse(payload || '{}');
+const signingSecret = getScriptSecret('QR_CTX_SIGNING_SECRET');
+const verifiedCtx = verifyCtxToken(requestPayload.ctx, signingSecret);
+
+if (verifiedCtx.payload && Object.keys(verifiedCtx.payload).length > 0) {
+   const ctxEventId = String(verifiedCtx.payload.event_id || '').trim();
+   const ctxFlowUrl = String(verifiedCtx.payload.flow_url || '').trim();
+
+   if (ctxEventId && String(requestPayload.event_id || '').trim() !== ctxEventId) {
+      throw new Error('event_id does not match ctx payload');
+   }
+
+   if (ctxFlowUrl && String(requestPayload.flow_url || '').trim() !== ctxFlowUrl) {
+      throw new Error('flow_url does not match ctx payload');
+   }
+}
+```
+
+If you do not want signing enforcement, leave `QR_CTX_SIGNING_SECRET` unset in Apps Script. In that mode, `ctx` is decoded but not signature-verified.
+
 ### Proxy checklist
 
 - `FLOW_URL` in `site/config.js` points to the proxy `/exec` URL, not the changing downstream target.
@@ -399,3 +513,66 @@ For the public GitHub Pages site, `FLOW_URL` should usually be a stable public e
 The admin password is created and stored per device in the Electron app. It is not stored in `site/config.js`.
 
 For packaged apps, the admin dialog writes the endpoint and event values to Electron user data for that device.
+
+## Where to set QR_CTX_SIGNING_SECRET
+
+Use the same secret value in the environments below:
+
+1. QR generation environment
+   Set `QR_CTX_SIGNING_SECRET` in the shell, local `.env` loader, or CI/CD job that runs `npm run generate:qr`.
+2. Electron app runtime (for in-app QR signing)
+   Set `QR_CTX_SIGNING_SECRET` in the environment used to launch Electron (for example before `npm start`).
+3. Apps Script proxy runtime
+   Set `QR_CTX_SIGNING_SECRET` as a Script Property in the proxy Apps Script project.
+
+Recommended places:
+
+- Local development: set shell environment variable temporarily before running `npm run generate:qr`.
+- Local Electron run (PowerShell): `$env:QR_CTX_SIGNING_SECRET = "replace-with-long-random-secret"` then `npm start -- --nokiosk`.
+- GitHub Actions: store it in repository or environment **Secrets**, then expose it as an env var in the workflow step.
+- Other CI systems: store it in the platform secret vault and map to env var `QR_CTX_SIGNING_SECRET` for the build job.
+
+### Project-local settings file option
+
+If you prefer a project-scoped local settings file:
+
+1. Copy `.env.local.example` to `.env.local`.
+2. Set `QR_CTX_SIGNING_SECRET` in `.env.local`.
+3. Use the local wrapper scripts:
+
+```bash
+npm run generate:qr:local
+npm run start:local
+npm run start:nokiosk:local
+```
+
+Notes:
+
+- `.env.local` is ignored by git and should not be committed.
+- `.env.local.example` is safe to commit as a template.
+
+### Bundled secret in release artifacts (option 2)
+
+If end users cannot set environment variables or local files, you can bake the signing secret into the packaged Electron app at build time.
+
+1. Set `QR_CTX_SIGNING_SECRET_BUNDLED` in the build environment.
+2. Run one of the Electron build commands.
+3. The build wrapper writes a temporary bundled secret file, packages it, then removes the temporary file from the workspace.
+
+PowerShell example:
+
+```powershell
+$env:QR_CTX_SIGNING_SECRET_BUNDLED = "replace-with-long-random-secret"
+npm run build:win
+```
+
+Bash example:
+
+```bash
+QR_CTX_SIGNING_SECRET_BUNDLED="replace-with-long-random-secret" npm run build:mac
+```
+
+Important:
+
+- Runtime env var `QR_CTX_SIGNING_SECRET` still takes precedence when present.
+- Bundling a secret in a desktop app is obfuscation, not strong secrecy. A determined user can extract embedded values from packaged apps.

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.0.2 - Contact preferences copy and release maintenance
+
+### Changed
+
+* Update the contact preferences agreement to describe email updates about news, events and updates.
+* Update the Electron dependency to 44.2.0 and refresh the application release metadata.
+
 ## 2.0.1 - Direct website channel tracking
 
 ### Fixed
