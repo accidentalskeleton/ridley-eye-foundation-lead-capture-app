@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.0.3 - Fix FLOW_URL loss on QR-driven registrations
+
+### Fixed
+
+* Stop query-param/`ctx` overrides from clobbering the bundled `FLOW_URL` when a QR link only carries an event ID, which disabled submissions on the public registration form.
+
 ## 2.0.2 - Contact preferences copy and release maintenance
 
 ### Changed
