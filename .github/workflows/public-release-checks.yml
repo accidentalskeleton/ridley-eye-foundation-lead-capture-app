@@ -1,0 +1,64 @@
+name: Public release documentation checks
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ridley-doc-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-public-downloads:
+    name: Verify public download metadata
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out documentation
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate public documentation and checksum manifest
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path(".")
+          required = (
+              "README.md",
+              "latest/SETUP.md",
+              "latest/USER_GUIDE.md",
+              "latest/CHANGELOG.md",
+              "latest/SHA256SUMS.txt",
+          )
+          for filename in required:
+              path = root / filename
+              if not path.is_file() or not path.read_text(encoding="utf-8").strip():
+                  raise SystemExit(f"Missing or empty required file: {filename}")
+
+          readme = (root / "README.md").read_text(encoding="utf-8")
+          for filename in required[1:]:
+              if f"./{filename}" not in readme:
+                  raise SystemExit(f"Root README does not link to {filename}")
+
+          entries = (root / "latest/SHA256SUMS.txt").read_text(encoding="utf-8").splitlines()
+          if not entries:
+              raise SystemExit("Checksum manifest is empty")
+          filenames = set()
+          for index, line in enumerate(entries, 1):
+              match = re.fullmatch(r"([0-9a-fA-F]{64})  ([^\\/\r\n]+)", line)
+              if match is None:
+                  raise SystemExit(f"Malformed SHA256SUMS entry at line {index}")
+              name = match.group(2)
+              if name in filenames:
+                  raise SystemExit(f"Duplicate checksum filename: {name}")
+              filenames.add(name)
+          print(f"Validated {len(required)} files and {len(entries)} checksum entries")
+          print("Note: checksums are syntax-checked, not verified against release binaries.")
+          PY
